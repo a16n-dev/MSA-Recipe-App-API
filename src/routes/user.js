@@ -5,7 +5,7 @@ const router = new express.Router();
 const User = require('../models/user');
 const authCheck = require('../middleware/auth');
 
-router.get('', async (req, res) => {
+router.get('', (req, res) => {
   res.send('hello!');
 });
 
@@ -68,26 +68,26 @@ router.get('/user/:id', authCheck, async (req, res) => {
   }
 });
 
-// Update existing user
-router.patch('/users/me', authCheck, async (req, res) => {
-  // Ensure only valid properties are specified
-  const updates = Object.keys(req.body);
-  const allowedUpdates = ['name', 'email', 'password', 'age'];
-  const isValidOperation = updates.every((update) => allowedUpdates.includes(update));
+// // Update existing user
+// router.patch('/users/me', authCheck, async (req, res) => {
+//   // Ensure only valid properties are specified
+//   const updates = Object.keys(req.body);
+//   const allowedUpdates = ['name', 'email', 'password', 'age'];
+//   const isValidOperation = updates.every((update) => allowedUpdates.includes(update));
 
-  if (!isValidOperation) {
-    return res.status(400).send({ error: 'Invalid updates' });
-  }
+//   if (!isValidOperation) {
+//     return res.status(400).send({ error: 'Invalid updates' });
+//   }
 
-  try {
-    updates.forEach((update) => req.user[update] = req.body[update]);
-    await req.user.save();
+//   try {
+//     updates.forEach((update) => req.user[update] = req.body[update]);
+//     await req.user.save();
 
-    res.send(req.user);
-  } catch (error) {
-    res.status(500).send(error);
-  }
-});
+//     res.send(req.user);
+//   } catch (error) {
+//     res.status(500).send(error);
+//   }
+// });
 
 // Delete existing user
 router.delete('/user', authCheck, async (req, res) => {
