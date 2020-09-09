@@ -63,4 +63,28 @@ router.get('/recipe/:id', authCheck, async (req, res) => {
   }
 });
 
+// Update existing recipe, only if user is recipe owner
+router.patch('/recipe/:id', authCheck, async (req, res) => {
+  // The user who send the request
+  const user = await User.findOne({ firebaseUUID: req.user.sub });
+
+  // Ensure only valid properties are specified
+  const updates = Object.keys(req.body);
+  const allowedUpdates = ['name', 'ingredients', 'method', 'public'];
+  const isValidOperation = updates.every((update) => allowedUpdates.includes(update));
+
+  if (!isValidOperation) {
+    return res.status(400).send({ error: 'Invalid updates' });
+  }
+
+  try {
+    updates.forEach((update) => req.user[update] = req.body[update]);
+    await req.user.save();
+
+    res.send(req.user);
+  } catch (error) {
+    res.status(500).send(error);
+  }
+});
+
 module.exports = router;
