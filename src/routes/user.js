@@ -5,6 +5,10 @@ const router = new express.Router();
 const User = require('../models/user');
 const authCheck = require('../middleware/auth');
 
+router.get('', async (req, res) => {
+  res.send('hello!');
+});
+
 // Persist user in database. This will try to create the user if
 // they dont exist and then return the user object
 router.post('/user', authCheck, async (req, res) => {
