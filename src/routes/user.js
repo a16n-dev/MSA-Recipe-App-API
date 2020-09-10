@@ -17,12 +17,10 @@ router.post('/user', authCheck, async (req, res) => {
     name, picture, email, sub,
   } = req.user;
 
-  // Check if user already exists based on email
-  const existingUser = await User.findOne({ email });
+  // Check if user already exists based on sub
+  const existingUser = await User.findOne({ firebaseUUID: sub });
 
   if (existingUser) {
-    // If user already exists ensure that their firebase uuid matches
-    existingUser.firebaseUUID = sub;
     res.status(200).json(existingUser);
   } else {
     const user = new User({
