@@ -24,6 +24,9 @@ const recipeSchema = new mongoose.Schema({
     required: true,
     ref: 'User',
   },
+  authorName: {
+    type: String,
+  },
 }, {
   timestamps: true,
 });

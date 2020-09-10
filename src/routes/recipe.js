@@ -19,6 +19,7 @@ router.post('/recipe', authCheck, async (req, res) => {
     ...req.body,
     // eslint-disable-next-line no-underscore-dangle
     user: user._id,
+    authorName: user.name,
   });
 
   try {
