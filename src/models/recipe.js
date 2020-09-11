@@ -13,11 +13,17 @@ const recipeSchema = new mongoose.Schema({
   method: {
     type: Array,
   },
+  prepTime: {
+    type: Number,
+  },
+  servings: {
+    type: Number,
+  },
   public: {
     type: Boolean,
   },
   notes: {
-    type: String,
+    type: Array,
   },
   user: {
     type: mongoose.Schema.Types.ObjectId,

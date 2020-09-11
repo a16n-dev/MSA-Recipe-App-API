@@ -33,8 +33,9 @@ router.post('/recipe', authCheck, async (req, res) => {
 // Get all recipes for specified user
 router.get('/recipe', authCheck, async (req, res) => {
   // Get the user who sent the request
+  console.log(req.user.sub);
   const user = await User.findOne({ firebaseUUID: req.user.sub });
-
+  console.log(user);
   if (user) {
     // TODO: Pagination options?
     await user.populate('recipes').execPopulate();
@@ -57,7 +58,27 @@ router.get('/recipe/:id', authCheck, async (req, res) => {
     if (recipe.user.toString() === user._id.toString() || recipe.public === true) {
       res.status(200).json(recipe);
     } else {
-      res.status(401).send('rip'); // User does not have permission to view
+      res.status(401).send('Unauthorized'); // User does not have permission to view
+    }
+  } else {
+    res.status(404).send(); // No recipe found
+  }
+});
+
+// Delete recipe by id, only if the person is the owner or the recipe is public
+router.delete('/recipe/:id', authCheck, async (req, res) => {
+  // Get the user who sent the request
+  const user = await User.findOne({ firebaseUUID: req.user.sub });
+
+  // Find the specific recipe
+  const recipe = await Recipe.findOne({ _id: req.params.id });
+
+  if (recipe) {
+    if (recipe.user.toString() === user._id.toString()) {
+      recipe.remove();
+      res.status(200).send();
+    } else {
+      res.status(401).send('Unauthorized'); // User does not have permission to view
     }
   } else {
     res.status(404).send(); // No recipe found
