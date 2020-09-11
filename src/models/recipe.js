@@ -33,6 +33,9 @@ const recipeSchema = new mongoose.Schema({
   authorName: {
     type: String,
   },
+  image: {
+    type: Buffer,
+  },
 }, {
   timestamps: true,
 });
