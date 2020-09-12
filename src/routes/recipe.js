@@ -2,7 +2,7 @@
 const express = require('express');
 
 const router = new express.Router();
-
+const path = require('path');
 const sharp = require('sharp');
 const User = require('../models/user');
 const authCheck = require('../middleware/auth');
@@ -41,7 +41,7 @@ router.get('/recipe', authCheck, async (req, res) => {
   console.log(user);
   if (user) {
     // TODO: Pagination options?
-    await user.populate('recipes').execPopulate();
+    await user.populate('recipes', '_id name prepTime servings createdAt updatedAt').execPopulate();
     console.log(user.recipes);
     res.status(200).json(user.recipes);
   }
@@ -99,7 +99,7 @@ router.patch('/recipe/:id', authCheck, async (req, res) => {
     // If user owns recipe
     if (recipe.user.toString() === user._id.toString()) {
       const updates = Object.keys(req.body);
-      const allowedUpdates = ['name', 'ingredients', 'method', 'notes', 'public'];
+      const allowedUpdates = ['name', 'ingredients', 'method', 'notes', 'public', 'prepTime', 'servings'];
       const isValidOperation = updates.every((update) => allowedUpdates.includes(update));
 
       if (!isValidOperation) {
@@ -142,18 +142,24 @@ router.post('/recipe/:id/image', authCheck, upload.single('image'), async (req, 
 
 // serve the image for a recipe
 
-// Get a profile picture for a user
+// Get the image for a recipe
 router.get('/recipe/:id/image', async (req, res) => {
   const recipe = await Recipe.findOne({ _id: req.params.id });
 
   try {
-    if (!recipe || !recipe.image) {
+    if (!recipe) {
       throw new Error();
     }
 
     res.set('Content-Type', 'image/png');
-    res.send(recipe.image);
+
+    if (recipe.image) {
+      res.send(recipe.image);
+    } else {
+      res.sendFile(path.join(__dirname, '../assets/default.png'));
+    }
   } catch (e) {
+    console.log(e);
     res.status(404).send();
   }
 });

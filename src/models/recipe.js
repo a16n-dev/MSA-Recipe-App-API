@@ -14,13 +14,14 @@ const recipeSchema = new mongoose.Schema({
     type: Array,
   },
   prepTime: {
-    type: Number,
+    type: String,
   },
   servings: {
     type: Number,
   },
-  public: {
+  isPublic: {
     type: Boolean,
+    default: false,
   },
   notes: {
     type: Array,
