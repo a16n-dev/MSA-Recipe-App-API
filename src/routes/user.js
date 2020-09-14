@@ -3,7 +3,8 @@ const express = require('express');
 const router = new express.Router();
 
 const User = require('../models/user');
-const authCheck = require('../middleware/auth');
+const { authCheck } = require('../middleware/auth');
+const Recipe = require('../models/recipe');
 
 router.get('', (req, res) => {
   res.send('hello!');
@@ -67,31 +68,41 @@ router.get('/user/:id', async (req, res) => {
   }
 });
 
-// // Update existing user
-// router.patch('/users/me', authCheck, async (req, res) => {
-//   // Ensure only valid properties are specified
-//   const updates = Object.keys(req.body);
-//   const allowedUpdates = ['name', 'email', 'password', 'age'];
-//   const isValidOperation = updates.every((update) => allowedUpdates.includes(update));
+// Update existing user
+router.patch('/user', authCheck, async (req, res) => {
+  const user = await User.findOne({
+    firebaseUUID: req.user.sub,
+  });
 
-//   if (!isValidOperation) {
-//     return res.status(400).send({ error: 'Invalid updates' });
-//   }
+  if (user) {
+    const updates = Object.keys(req.body);
+    const allowedUpdates = ['name'];
+    const isValidOperation = updates.every((update) => allowedUpdates.includes(update));
 
-//   try {
-//     updates.forEach((update) => req.user[update] = req.body[update]);
-//     await req.user.save();
+    if (!isValidOperation) {
+      return res.status(400).send({ error: 'Invalid updates' });
+    }
 
-//     res.send(req.user);
-//   } catch (error) {
-//     res.status(500).send(error);
-//   }
-// });
+    try {
+      // eslint-disable-next-line no-return-assign
+      updates.forEach((update) => user[update] = req.body[update]);
+      await user.save();
+
+      res.status(200).send(user);
+    } catch (error) {
+      res.status(500).send(error);
+    }
+  } else {
+    res.status(404).send();
+  }
+});
 
 // Delete existing user
 router.delete('/user', authCheck, async (req, res) => {
   try {
-    await User.deleteOne({ firebaseUUID: req.user.sub });
+    const user = await User.findOne({ firebaseUUID: req.user.sub });
+
+    user.remove();
     res.status(200).send();
   } catch (error) {
     console.log(error);

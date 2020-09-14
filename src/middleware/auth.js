@@ -22,4 +22,22 @@ const authCheck = (req, res, next) => {
   }
 };
 
-module.exports = authCheck;
+const authObserve = (req, res, next) => {
+  if (req.headers.authtoken) {
+    admin
+      .auth()
+      .verifyIdToken(req.headers.authtoken)
+      .then((result) => {
+        req.user = result;
+        next();
+      })
+      .catch((error) => console.log(error));
+  } else {
+    next();
+  }
+};
+
+module.exports = {
+  authCheck,
+  authObserve,
+};

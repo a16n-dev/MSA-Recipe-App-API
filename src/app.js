@@ -1,15 +1,21 @@
 // Imports
 const express = require('express');
 const cors = require('cors');
-// const swaggerUi = require('swagger-ui-express');
-// const swaggerDocument = require('./swagger/swagger.json');
+const swaggerUi = require('swagger-ui-express');
+const swaggerJSDoc = require('swagger-jsdoc');
 const userRoute = require('./routes/user');
 const recipeRoute = require('./routes/recipe');
 require('./util/mongoose');
 
-// Load routers
-
-// const taskRouter = require('./routers/task');
+const swaggerOptions = {
+  swaggerDefinition: {
+    info: {
+      title: 'Recipe App API',
+      description: 'Documentation for Braize API',
+    },
+  },
+  apis: ['./src/routes/*.js'],
+};
 
 const app = express();
 
@@ -18,7 +24,8 @@ app.use(express.json());
 app.use(cors());
 
 // Swagger endpoint
-// app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+const swaggerDoc = swaggerJSDoc(swaggerOptions);
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDoc));
 
 // Routers
 app.use(userRoute);
