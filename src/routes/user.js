@@ -52,8 +52,7 @@ router.get('/user', authCheck, async (req, res) => {
 });
 
 // Fetch the user with the given id (_id not firebase id)
-// Fetch the authenticated user
-router.get('/user/:id', authCheck, async (req, res) => {
+router.get('/user/:id', async (req, res) => {
   const { id } = req.params;
   console.log(id);
   try {
