@@ -187,7 +187,7 @@ router.patch('/recipe/:id', authCheck, async (req, res) => {
     // If user owns recipe
     if (recipe.user.toString() === user._id.toString()) {
       const updates = Object.keys(req.body);
-      const allowedUpdates = ['name', 'ingredients', 'method', 'notes', 'public', 'prepTime', 'servings'];
+      const allowedUpdates = ['name', 'ingredients', 'method', 'notes', 'isPublic', 'prepTime', 'servings'];
       const isValidOperation = updates.every((update) => allowedUpdates.includes(update));
 
       if (!isValidOperation) {
