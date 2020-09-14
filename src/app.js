@@ -1,6 +1,6 @@
 // Imports
 const express = require('express');
-
+const cors = require('cors');
 // const swaggerUi = require('swagger-ui-express');
 // const swaggerDocument = require('./swagger/swagger.json');
 const userRoute = require('./routes/user');
@@ -15,6 +15,7 @@ const app = express();
 
 // Parse incoming JSON
 app.use(express.json());
+app.use(cors());
 
 // Swagger endpoint
 // app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
