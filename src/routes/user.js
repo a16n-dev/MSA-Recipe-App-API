@@ -7,12 +7,24 @@ const User = require('../models/user');
 const { authCheck } = require('../middleware/auth');
 const upload = require('../util/multer');
 
-router.get('', (req, res) => {
-  res.send('hello!');
-});
-
-// Persist user in database. This will try to create the user if
-// they dont exist and then return the user object
+/**
+ * @swagger
+ *
+ * /user:
+ *   post:
+ *     description: Creates the user in the database if they dont already exist
+ *     produces:
+ *       - application/json
+ *     responses:
+ *       200:
+ *          description: Success, user already exists
+ *       201:
+ *         description: Success, user created
+ *       500:
+ *          description: Internal server error
+ *     tags:
+ *          - Users
+ */
 router.post('/user', authCheck, async (req, res) => {
   console.log(req.user);
   const {
@@ -41,7 +53,22 @@ router.post('/user', authCheck, async (req, res) => {
   }
 });
 
-// Fetch the authenticated user
+/**
+ * @swagger
+ *
+ * /user:
+ *   get:
+ *     description: Get the currently authenticated user
+ *     produces:
+ *       - application/json
+ *     responses:
+ *       200:
+ *          description: Success
+ *       404:
+ *          description: User not found
+ *     tags:
+ *          - Users
+ */
 router.get('/user', authCheck, async (req, res) => {
   const { email } = req.user;
   console.log(email);
@@ -53,7 +80,22 @@ router.get('/user', authCheck, async (req, res) => {
   }
 });
 
-// Fetch the user with the given id (_id not firebase id)
+/**
+ * @swagger
+ *
+ * /user/{id}:
+ *   get:
+ *     description: Get a user by their id
+ *     produces:
+ *       - application/json
+ *     responses:
+ *       200:
+ *          description: Success
+ *       404:
+ *          description: User not found
+ *     tags:
+ *          - Users
+ */
 router.get('/user/:id', async (req, res) => {
   const { id } = req.params;
   try {
@@ -72,7 +114,26 @@ router.get('/user/:id', async (req, res) => {
   }
 });
 
-// Update existing user
+/**
+ * @swagger
+ *
+ * /user:
+ *   patch:
+ *     description: Update the currently authenticated user
+ *     produces:
+ *       - application/json
+ *     responses:
+ *       200:
+ *          description: Success
+ *       400:
+ *          description: Invalid updates
+ *       404:
+ *          description: User not found
+ *       500:
+ *          description: Internal server error
+ *     tags:
+ *          - Users
+ */
 router.patch('/user', authCheck, async (req, res) => {
   const user = await User.findOne({
     firebaseUUID: req.user.sub,
@@ -101,7 +162,22 @@ router.patch('/user', authCheck, async (req, res) => {
   }
 });
 
-// Delete existing user
+/**
+ * @swagger
+ *
+ * /user:
+ *   delete:
+ *     description: Deletes the currently authenticated user
+ *     produces:
+ *       - application/json
+ *     responses:
+ *       200:
+ *          description: Success
+ *       500:
+ *          description: Internal server error
+ *     tags:
+ *          - Users
+ */
 router.delete('/user', authCheck, async (req, res) => {
   try {
     const user = await User.findOne({ firebaseUUID: req.user.sub });
@@ -114,7 +190,22 @@ router.delete('/user', authCheck, async (req, res) => {
   }
 });
 
-// Set the image for a user
+/**
+ * @swagger
+ *
+ * /user/image:
+ *   post:
+ *     description: Sets the profile image for the authenticated user
+ *     produces:
+ *       - application/json
+ *     responses:
+ *       201:
+ *          description: Success
+ *       400:
+ *          description: An error occured
+ *     tags:
+ *          - Users
+ */
 router.post('/user/image', authCheck, upload.single('image'), async (req, res) => {
   // Get relevant db entries
 
@@ -131,7 +222,7 @@ router.post('/user/image', authCheck, upload.single('image'), async (req, res) =
   // eslint-disable-next-line no-underscore-dangle
   user.profileUrl = `https://recipe-app-api.azurewebsites.net/user/${user._id}/image`;
   await user.save();
-  res.status(201).send();
+  res.status(201).json({ url: user.profileUrl });
 }, (error, req, res, next) => {
   console.log(error.message);
   res.status(400).send({
@@ -139,7 +230,22 @@ router.post('/user/image', authCheck, upload.single('image'), async (req, res) =
   });
 });
 
-// Get the image for a user
+/**
+ * @swagger
+ *
+ * /user/{id}/image:
+ *   get:
+ *     description: Get the profile image for the user with the specified id
+ *     produces:
+ *       - application/json
+ *     responses:
+ *       200:
+ *          description: Success
+ *       404:
+ *          description: Image not found
+ *     tags:
+ *          - Users
+ */
 router.get('/user/:id/image', async (req, res) => {
   const user = await User.findOne({
     _id: req.params.id,
@@ -159,6 +265,41 @@ router.get('/user/:id/image', async (req, res) => {
     }
   } catch (e) {
     console.log(e);
+    res.status(404).send();
+  }
+});
+
+/**
+ * @swagger
+ *
+ * /user/image:
+ *   delete:
+ *     description: Delete the profile picture for the currently authenticated user.
+ *                  This will reset the picture to their social photo
+ *     produces:
+ *       - application/json
+ *     responses:
+ *       200:
+ *          description: Success
+ *       404:
+ *          description: User not found
+ *     tags:
+ *          - Users
+ */
+router.delete('/user/image', authCheck, upload.single('image'), async (req, res) => {
+  // Get relevant db entries
+
+  const user = await User.findOne({
+    firebaseUUID: req.user.sub,
+  });
+  console.log(req.user);
+
+  if (user) {
+    user.image = null;
+    user.profileUrl = req.user.picture;
+    await user.save();
+    res.status(200).json({ url: user.profileUrl });
+  } else {
     res.status(404).send();
   }
 });

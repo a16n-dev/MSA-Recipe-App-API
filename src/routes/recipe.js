@@ -76,7 +76,7 @@ router.get('/recipe', authCheck, async (req, res) => {
   if (user) {
     // TODO: Pagination options?
     try {
-      await user.populate('recipes', '_id name prepTime servings createdAt updatedAt').execPopulate();
+      await user.populate('recipes', '_id name prepTime servings createdAt updatedAt isPublic ingredients method').execPopulate();
       res.status(200).json(user.recipes);
     } catch (error) {
       console.log('bruh');
@@ -129,6 +129,22 @@ router.get('/recipe/:id', authCheck, async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ *
+ * /recipe/public/{id}:
+ *   get:
+ *     description: Returns the publicly available information for a public recipe
+ *     produces:
+ *       - application/json
+ *     responses:
+ *       200:
+ *          description: Success
+ *       404:
+ *          description: Recipe not found
+ *     tags:
+ *          - Recipes
+ */
 router.get('/recipe/public/:id', authObserve, async (req, res) => {
   // Get the user who sent the request
 
@@ -148,7 +164,24 @@ router.get('/recipe/public/:id', authObserve, async (req, res) => {
   }
 });
 
-// Delete recipe by id, only if the person is the owner or the recipe is public
+/**
+ * @swagger
+ *
+ * /recipe/{id}:
+ *   delete:
+ *     description: Deletes the recipe with the specified id
+ *     produces:
+ *       - application/json
+ *     responses:
+ *       200:
+ *          description: Success
+ *       401:
+ *          description: User is not authorized to do this
+ *       404:
+ *          description: Recipe not found
+ *     tags:
+ *          - Recipes
+ */
 router.delete('/recipe/:id', authCheck, async (req, res) => {
   // Get the user who sent the request
   const user = await User.findOne({
@@ -172,7 +205,26 @@ router.delete('/recipe/:id', authCheck, async (req, res) => {
   }
 });
 
-// Update existing recipe, only if user is recipe owner
+/**
+ * @swagger
+ *
+ * /recipe/{id}:
+ *   patch:
+ *     description: Updates the recipe with the specified id
+ *     produces:
+ *       - application/json
+ *     responses:
+ *       200:
+ *          description: Success
+ *       400:
+ *          description: Invalid updates were specified
+ *       401:
+ *          description: User is not authorized to do this
+ *       500:
+ *          description: Internal server error
+ *     tags:
+ *          - Recipes
+ */
 router.patch('/recipe/:id', authCheck, async (req, res) => {
   // The user who send the request
   const user = await User.findOne({
@@ -200,7 +252,7 @@ router.patch('/recipe/:id', authCheck, async (req, res) => {
           updates.forEach((update) => recipe[update] = req.body[update]);
           await recipe.save();
 
-          res.send(recipe);
+          res.status(200).send(recipe);
         } catch (error) {
           res.status(500).send(error);
         }
@@ -213,7 +265,24 @@ router.patch('/recipe/:id', authCheck, async (req, res) => {
   }
 });
 
-// Set the image for a recipe
+/**
+ * @swagger
+ *
+ * /recipe/{id}/image:
+ *   post:
+ *     description: Sets the display image for a recipe
+ *     produces:
+ *       - application/json
+ *     responses:
+ *       201:
+ *          description: Success
+ *       400:
+ *          description: An error occured
+ *       401:
+ *          description: User is not authorized to do this
+ *     tags:
+ *          - Recipes
+ */
 router.post('/recipe/:id/image', authCheck, upload.single('image'), async (req, res) => {
   // Get relevant db entries
 
@@ -224,14 +293,19 @@ router.post('/recipe/:id/image', authCheck, upload.single('image'), async (req, 
     _id: req.params.id,
   });
 
-  // Process image
-  const buffer = await sharp(req.file.buffer).resize({
-    width: 250,
-    height: 250,
-  }).png().toBuffer();
-  recipe.image = buffer;
-  await recipe.save();
-  res.status(201).send();
+  if (recipe.user.toString() === user._id.toString()) {
+    // Process image
+    const buffer = await sharp(req.file.buffer).resize({
+      width: 250,
+      height: 250,
+    }).png().toBuffer();
+
+    recipe.image = buffer;
+    await recipe.save();
+    res.status(201).send();
+  } else {
+    res.status(401).send();
+  }
 }, (error, req, res, next) => {
   console.log(error.message);
   res.status(400).send({
@@ -239,9 +313,22 @@ router.post('/recipe/:id/image', authCheck, upload.single('image'), async (req, 
   });
 });
 
-// serve the image for a recipe
-
-// Get the image for a recipe
+/**
+ * @swagger
+ *
+ * /recipe/{id}/image:
+ *   get:
+ *     description: Returns the image to display for a recipe
+ *     produces:
+ *       - application/json
+ *     responses:
+ *       200:
+ *          description: Success
+ *       404:
+ *          description: Image not found
+ *     tags:
+ *          - Recipes
+ */
 router.get('/recipe/:id/image', async (req, res) => {
   const recipe = await Recipe.findOne({
     _id: req.params.id,

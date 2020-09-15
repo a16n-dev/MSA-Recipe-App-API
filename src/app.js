@@ -10,8 +10,8 @@ require('./util/mongoose');
 const swaggerOptions = {
   swaggerDefinition: {
     info: {
-      title: 'Recipe App API',
-      description: 'Documentation for Braize API',
+      title: 'Braize API Docs',
+      description: 'Documentation for Braize. Go to http://braize.azurewebsites.net/ to see it in action',
     },
   },
   apis: ['./src/routes/*.js'],
