@@ -20,6 +20,9 @@ const userSchema = new mongoose.Schema({
   profileUrl: {
     type: String,
   },
+  image: {
+    type: Buffer,
+  },
 }, {
   timestamps: true,
 });

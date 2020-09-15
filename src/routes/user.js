@@ -1,10 +1,11 @@
 const express = require('express');
 
 const router = new express.Router();
-
+const path = require('path');
+const sharp = require('sharp');
 const User = require('../models/user');
 const { authCheck } = require('../middleware/auth');
-const Recipe = require('../models/recipe');
+const upload = require('../util/multer');
 
 router.get('', (req, res) => {
   res.send('hello!');
@@ -110,6 +111,55 @@ router.delete('/user', authCheck, async (req, res) => {
   } catch (error) {
     console.log(error);
     res.status(500).send(error);
+  }
+});
+
+// Set the image for a user
+router.post('/user/image', authCheck, upload.single('image'), async (req, res) => {
+  // Get relevant db entries
+
+  const user = await User.findOne({
+    firebaseUUID: req.user.sub,
+  });
+
+  // Process image
+  const buffer = await sharp(req.file.buffer).resize({
+    width: 250,
+    height: 250,
+  }).png().toBuffer();
+  user.image = buffer;
+  // eslint-disable-next-line no-underscore-dangle
+  user.profileUrl = `https://recipe-app-api.azurewebsites.net/user/${user._id}/image`;
+  await user.save();
+  res.status(201).send();
+}, (error, req, res, next) => {
+  console.log(error.message);
+  res.status(400).send({
+    error: error.message,
+  });
+});
+
+// Get the image for a user
+router.get('/user/:id/image', async (req, res) => {
+  const user = await User.findOne({
+    _id: req.params.id,
+  });
+
+  try {
+    if (!user) {
+      throw new Error();
+    }
+
+    res.set('Content-Type', 'image/png');
+
+    if (user.image) {
+      res.send(user.image);
+    } else {
+      res.status(404);
+    }
+  } catch (e) {
+    console.log(e);
+    res.status(404).send();
   }
 });
 
