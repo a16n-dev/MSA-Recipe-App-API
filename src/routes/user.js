@@ -55,11 +55,14 @@ router.get('/user', authCheck, async (req, res) => {
 // Fetch the user with the given id (_id not firebase id)
 router.get('/user/:id', async (req, res) => {
   const { id } = req.params;
-  console.log(id);
   try {
     const foundUser = await User.findOne({ _id: id });
+
     if (foundUser) {
-      res.status(200).json(foundUser);
+      // Populate the users public recipes
+      await foundUser.populate({ path: 'recipes', select: '_id name prepTime servings', match: { isPublic: true } }).execPopulate();
+      console.log(foundUser.recipes);
+      res.status(200).json({ user: foundUser, recipes: foundUser.recipes });
     } else {
       res.status(404).send();
     }
