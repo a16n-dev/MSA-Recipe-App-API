@@ -357,7 +357,22 @@ router.get('/recipe/:id/image', async (req, res) => {
   }
 });
 
-// Subscribes the authenticated user to the recipe with the specified id
+/**
+* @swagger
+*
+* /recipe/public/{id}/subscribe:
+*   post:
+*     description: Subscribes the authenticated user to the specified recipe
+*     produces:
+*       - application/json
+*     responses:
+*       200:
+*          description: Success
+*       404:
+*          description: Recipe not found
+*     tags:
+*          - Recipes
+*/
 router.post('/recipe/public/:id/subscribe', authCheck, async (req, res) => {
   // Get the user who sent the request
   const user = await User.findOne({
@@ -379,7 +394,22 @@ router.post('/recipe/public/:id/subscribe', authCheck, async (req, res) => {
   }
 });
 
-// Subscribes the authenticated user to the recipe with the specified id
+/**
+* @swagger
+*
+* /recipe/public/{id}/unsubscribe:
+*   post:
+*     description: Unsubscribes the authenticated user to the specified recipe
+*     produces:
+*       - application/json
+*     responses:
+*       200:
+*          description: Success
+*       404:
+*          description: Recipe not found
+*     tags:
+*          - Recipes
+*/
 router.post('/recipe/public/:id/unsubscribe', authCheck, async (req, res) => {
   console.log('endpoint called');
   // Get the user who sent the request
@@ -402,7 +432,24 @@ router.post('/recipe/public/:id/unsubscribe', authCheck, async (req, res) => {
   }
 });
 
-// Gets all subscribed recipes for the ucrrent user
+/**
+* @swagger
+*
+* /subscriptions:
+*   post:
+*     description: Returns all recipes the authenticated user is subscribed to
+*     produces:
+*       - application/json
+*     responses:
+*       200:
+*          description: Success
+*       400:
+*          description: An error occured
+*       404:
+*          description: Recipe not found
+*     tags:
+*          - Recipes
+*/
 router.get('/subscriptions', authCheck, async (req, res) => {
   // Get the user who sent the request
   console.log(req.user.sub);
