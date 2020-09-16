@@ -207,7 +207,6 @@ router.post('/user/image', authCheck, upload.single('image'), async (req, res) =
   await user.save();
   res.status(201).json({ url: user.profileUrl });
 }, (error, req, res, next) => {
-  console.log(error.message);
   res.status(400).send({
     error: error.message,
   });
@@ -234,11 +233,9 @@ router.get('/user/:id/image', async (req, res) => {
     _id: req.params.id,
   });
 
-  try {
-    if (!user) {
-      res.status(404).send();
-    }
-
+  if (!user) {
+    res.status(404).send();
+  } else {
     res.set('Content-Type', 'image/png');
 
     if (user.image) {
@@ -246,9 +243,6 @@ router.get('/user/:id/image', async (req, res) => {
     } else {
       res.status(404).send();
     }
-  } catch (e) {
-    console.log(e);
-    res.status(404).send();
   }
 });
 

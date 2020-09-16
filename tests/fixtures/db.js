@@ -33,10 +33,71 @@ const recipeOne = {
   method: ['test method step'],
   prepTime: '10 mins',
   servings: 1,
+  notes: [
+    'this is a note!',
+  ],
+  image: 'this is an image',
   isPublic: true,
   authorName: userOne.name,
   // eslint-disable-next-line no-underscore-dangle
   user: userOne._id,
+};
+
+const recipeTwoId = new mongoose.Types.ObjectId();
+const recipeTwo = {
+  _id: recipeTwoId,
+  name: 'private recipe for user 1',
+  ingredients: ['test ingredient'],
+  method: ['test method step'],
+  prepTime: '10 mins',
+  servings: 1,
+  isPublic: false,
+  authorName: userOne.name,
+  // eslint-disable-next-line no-underscore-dangle
+  user: userOne._id,
+};
+
+const recipeThreeId = new mongoose.Types.ObjectId();
+const recipeThree = {
+  _id: recipeThreeId,
+  name: 'public recipe for user 2',
+  ingredients: ['test ingredient'],
+  method: ['test method step'],
+  prepTime: '10 mins',
+  servings: 1,
+  isPublic: true,
+  subscribers: [userTwoId],
+  authorName: userTwo.name,
+  // eslint-disable-next-line no-underscore-dangle
+  user: userTwo._id,
+};
+
+const recipeFourId = new mongoose.Types.ObjectId();
+const recipeFour = {
+  _id: recipeFourId,
+  name: 'private recipe for user 2',
+  ingredients: ['test ingredient'],
+  method: ['test method step'],
+  prepTime: '10 mins',
+  servings: 1,
+  isPublic: false,
+  authorName: userTwo.name,
+  // eslint-disable-next-line no-underscore-dangle
+  user: userTwo._id,
+};
+
+const recipeFiveId = new mongoose.Types.ObjectId();
+const recipeFive = {
+  _id: recipeFiveId,
+  name: 'private recipe for user 2',
+  ingredients: ['test ingredient'],
+  method: ['test method step'],
+  prepTime: '10 mins',
+  servings: 1,
+  isPublic: false,
+  authorName: userTwo.name,
+  // eslint-disable-next-line no-underscore-dangle
+  user: userTwo._id,
 };
 
 // Setup database
@@ -50,6 +111,9 @@ const setupDatabase = async () => {
   await new User(userTwo).save();
 
   await new Recipe(recipeOne).save();
+  await new Recipe(recipeTwo).save();
+  await new Recipe(recipeThree).save();
+  await new Recipe(recipeFour).save();
 };
 
 module.exports = {
@@ -58,6 +122,12 @@ module.exports = {
   userThreeId,
   userOne,
   userTwo,
-  userTwoId,
+  recipeOneId,
+  recipeOne,
+  recipeTwoId,
+  recipeTwo,
+  recipeThreeId,
+  recipeThree,
+  recipeFiveId,
   setupDatabase,
 };

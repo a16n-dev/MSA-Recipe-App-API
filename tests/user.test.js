@@ -2,7 +2,9 @@ const request = require('supertest');
 const Sinon = require('sinon');
 const fs = require('fs');
 const User = require('../src/models/user');
-const { setupDatabase, userOneId, userThreeId } = require('./fixtures/db');
+const {
+  setupDatabase, userOneId, userThreeId, userTwoId,
+} = require('./fixtures/db');
 
 const { authCheck, authObserve } = require('../src/middleware/auth');
 
@@ -11,9 +13,15 @@ jest.mock('../src/middleware/auth');
 const app = require('../src/app');
 const { fbUser1, fbUser2, fbUser3 } = require('./fixtures/firebase');
 const { Mongoose } = require('mongoose');
+const Recipe = require('../src/models/recipe');
 
 // Code to run before each test
 beforeEach(setupDatabase);
+
+afterAll(async () => {
+  await User.deleteMany();
+  await Recipe.deleteMany();
+});
 
 test('Test create user in database', async () => {
   const response = await request(app).post('/user').set('authToken', 'fb_token_3').send()
@@ -151,7 +159,18 @@ test('Test get image for user that doesnt exist', async () => {
     .expect(404);
 });
 
+test('Test get image for user that doesnt have an image set', async () => {
+  const response = await request(app).get(`/user/${userTwoId}/image`)
+    .send()
+    .expect(404);
+});
+
 test('Test delete image for user', async () => {
   const response = await request(app).delete('/user/image').set('authToken', 'fb_token_1').send()
     .expect(200);
+});
+
+test('Test delete image for user that doesnt exist', async () => {
+  const response = await request(app).delete('/user/image').set('authToken', 'fb_token_3').send()
+    .expect(404);
 });

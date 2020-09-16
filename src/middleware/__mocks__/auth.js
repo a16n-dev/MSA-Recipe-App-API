@@ -17,6 +17,13 @@ const authCheck = (req, res, next) => {
 
 const authObserve = (req, res, next) => {
   if (req.headers.authtoken) {
+    if (req.headers.authtoken === 'fb_token_1') {
+      req.user = fbUser1;
+    } else if (req.headers.authtoken === 'fb_token_2') {
+      req.user = fbUser2;
+    } else if (req.headers.authtoken === 'fb_token_3') {
+      req.user = fbUser3;
+    }
     next();
   } else {
     next();

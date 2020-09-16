@@ -38,14 +38,10 @@ router.post('/recipe', authCheck, async (req, res) => {
     authorName: user.name,
   });
 
-  try {
-    await recipe.save();
-    res.status(201).json({
-      id: recipe._id,
-    });
-  } catch (err) {
-    res.status(500).send(err);
-  }
+  await recipe.save();
+  res.status(201).json({
+    id: recipe._id,
+  });
 });
 
 /**
@@ -69,12 +65,9 @@ router.get('/recipe', authCheck, async (req, res) => {
   });
   if (user) {
     // TODO: Pagination options?
-    try {
-      await user.populate('recipes', '_id name prepTime servings createdAt updatedAt isPublic ingredients method').execPopulate();
-      res.status(200).json(user.recipes);
-    } catch (error) {
-      res.status(400).send(error);
-    }
+
+    await user.populate('recipes', '_id name prepTime servings createdAt updatedAt isPublic ingredients method').execPopulate();
+    res.status(200).json(user.recipes);
   } else {
     res.status(404).send();
   }
@@ -111,7 +104,7 @@ router.get('/recipe/:id', authCheck, async (req, res) => {
 
   if (recipe) {
     // Send data if user is owner or recipe is public
-    if (recipe.user.toString() === user._id.toString() || recipe.public === true) {
+    if (recipe.user.toString() === user._id.toString()) {
       res.status(200).json(recipe);
     } else {
       res.status(401).send('Unauthorized'); // User does not have permission to view
@@ -252,15 +245,11 @@ router.patch('/recipe/:id', authCheck, async (req, res) => {
           error: 'Invalid updates',
         });
       } else {
-        try {
-          // eslint-disable-next-line no-return-assign
-          updates.forEach((update) => recipe[update] = req.body[update]);
-          await recipe.save();
+        // eslint-disable-next-line no-return-assign
+        updates.forEach((update) => recipe[update] = req.body[update]);
+        await recipe.save();
 
-          res.status(200).send(recipe);
-        } catch (error) {
-          res.status(500).send(error);
-        }
+        res.status(200).send(recipe);
       }
     } else {
       res.status(401).send('Unauthorized'); // User does not have permission to view
@@ -312,7 +301,6 @@ router.post('/recipe/:id/image', authCheck, upload.single('image'), async (req, 
     res.status(401).send();
   }
 }, (error, req, res, next) => {
-  console.log(error.message);
   res.status(400).send({
     error: error.message,
   });
@@ -339,11 +327,9 @@ router.get('/recipe/:id/image', async (req, res) => {
     _id: req.params.id,
   });
 
-  try {
-    if (!recipe) {
-      throw new Error();
-    }
-
+  if (!recipe) {
+    res.status(404).send();
+  } else {
     res.set('Content-Type', 'image/png');
 
     if (recipe.image) {
@@ -351,9 +337,6 @@ router.get('/recipe/:id/image', async (req, res) => {
     } else {
       res.sendFile(path.join(__dirname, '../assets/default.png'));
     }
-  } catch (e) {
-    console.log(e);
-    res.status(404).send();
   }
 });
 
@@ -411,7 +394,6 @@ router.post('/recipe/public/:id/subscribe', authCheck, async (req, res) => {
 *          - Recipes
 */
 router.post('/recipe/public/:id/unsubscribe', authCheck, async (req, res) => {
-  console.log('endpoint called');
   // Get the user who sent the request
   const user = await User.findOne({
     firebaseUUID: req.user.sub,
@@ -452,21 +434,14 @@ router.post('/recipe/public/:id/unsubscribe', authCheck, async (req, res) => {
 */
 router.get('/subscriptions', authCheck, async (req, res) => {
   // Get the user who sent the request
-  console.log(req.user.sub);
   const user = await User.findOne({
     firebaseUUID: req.user.sub,
   });
 
-  console.log(user);
   if (user) {
-    try {
-      await user.populate('savedRecipes', '_id name prepTime servings createdAt updatedAt isPublic authorName ingredients method').execPopulate();
-      await user.savedRecipes.forEach((v, i) => v.populate('user').execPopulate());
-      console.log(user.savedRecipes);
-      res.status(200).json(user.savedRecipes);
-    } catch (error) {
-      res.status(400).send(error);
-    }
+    await user.populate('savedRecipes', '_id name prepTime servings createdAt updatedAt isPublic authorName ingredients method').execPopulate();
+    await user.savedRecipes.forEach((v, i) => v.populate('user').execPopulate());
+    res.status(200).json(user.savedRecipes);
   } else {
     res.status(404).send();
   }

@@ -9,7 +9,7 @@
   "scripts": {
     "start": "node src/index.js",
     "dev": "env-cmd -f ./config/dev.env nodemon src/index.js",
-    "test": "env-cmd -f ./config/test.env jest --coverage --watch --runInBand|| true",
+    "test": "env-cmd -f ./config/test.env jest --coverage --watchAll --runInBand|| true",
     "server": "D:/db/mongodb/bin/mongod.exe --dbpath D:/db/mongodb-data"
   },
   "keywords": [],

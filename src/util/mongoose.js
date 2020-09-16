@@ -6,8 +6,8 @@ mongoose.connect(process.env.MONGODB_URL, {
   useUnifiedTopology: true,
   useFindAndModify: false,
 }).then((result) => {
-  console.log('mongoose success!');
+  // console.log('mongoose success!');
 }).catch((err) => {
-  console.log('mongoose fail!');
-  console.log(err);
+  // console.log('mongoose fail!');
+  // console.log(err);
 });
