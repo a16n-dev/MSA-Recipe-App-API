@@ -33,11 +33,24 @@ userSchema.virtual('recipes', {
   foreignField: 'user',
 });
 
+userSchema.virtual('savedRecipes', {
+  ref: 'Recipe',
+  localField: '_id',
+  foreignField: 'subscribers',
+});
+
 userSchema.pre('remove', async function (next) {
   const user = this;
   // eslint-disable-next-line no-underscore-dangle
   await Recipe.deleteMany({ user: user._id });
-  console.log('deleting assocaited recipes');
+  next();
+});
+
+userSchema.post('save', async function (doc, next) {
+  const user = this;
+  // eslint-disable-next-line no-underscore-dangle
+  const recipies = await Recipe.find({ user: user._id });
+  recipies.forEach((v, i) => { v.authorName = user.name; v.save(); });
   next();
 });
 

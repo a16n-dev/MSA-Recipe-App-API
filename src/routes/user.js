@@ -26,7 +26,6 @@ const upload = require('../util/multer');
  *          - Users
  */
 router.post('/user', authCheck, async (req, res) => {
-  console.log(req.user);
   const {
     name, picture, email, sub,
   } = req.user;
@@ -44,12 +43,8 @@ router.post('/user', authCheck, async (req, res) => {
       firebaseUUID: sub,
     });
 
-    try {
-      await user.save();
-      res.status(201).json(user);
-    } catch (err) {
-      res.status(500).send(err);
-    }
+    await user.save();
+    res.status(201).json(user);
   }
 });
 
@@ -70,9 +65,8 @@ router.post('/user', authCheck, async (req, res) => {
  *          - Users
  */
 router.get('/user', authCheck, async (req, res) => {
-  const { email } = req.user;
-  console.log(email);
   try {
+    const { email } = req.user;
     const foundUser = await User.findOne({ email });
     res.status(200).json(foundUser);
   } catch (err) {
@@ -101,14 +95,9 @@ router.get('/user/:id', async (req, res) => {
   try {
     const foundUser = await User.findOne({ _id: id });
 
-    if (foundUser) {
-      // Populate the users public recipes
-      await foundUser.populate({ path: 'recipes', select: '_id name prepTime servings', match: { isPublic: true } }).execPopulate();
-      console.log(foundUser.recipes);
-      res.status(200).json({ user: foundUser, recipes: foundUser.recipes });
-    } else {
-      res.status(404).send();
-    }
+    // Populate the users public recipes
+    await foundUser.populate({ path: 'recipes', select: '_id name prepTime servings', match: { isPublic: true } }).execPopulate();
+    res.status(200).json({ user: foundUser, recipes: foundUser.recipes });
   } catch (err) {
     res.status(404).send(err);
   }
@@ -148,15 +137,11 @@ router.patch('/user', authCheck, async (req, res) => {
       return res.status(400).send({ error: 'Invalid updates' });
     }
 
-    try {
-      // eslint-disable-next-line no-return-assign
-      updates.forEach((update) => user[update] = req.body[update]);
-      await user.save();
+    // eslint-disable-next-line no-return-assign
+    updates.forEach((update) => user[update] = req.body[update]);
+    await user.save();
 
-      res.status(200).send(user);
-    } catch (error) {
-      res.status(500).send(error);
-    }
+    res.status(200).send(user);
   } else {
     res.status(404).send();
   }
@@ -179,14 +164,12 @@ router.patch('/user', authCheck, async (req, res) => {
  *          - Users
  */
 router.delete('/user', authCheck, async (req, res) => {
-  try {
-    const user = await User.findOne({ firebaseUUID: req.user.sub });
-
+  const user = await User.findOne({ firebaseUUID: req.user.sub });
+  if (user) {
     user.remove();
-    res.status(200).send();
-  } catch (error) {
-    console.log(error);
-    res.status(500).send(error);
+    res.status(200).send(user);
+  } else {
+    res.status(404).send();
   }
 });
 
@@ -253,7 +236,7 @@ router.get('/user/:id/image', async (req, res) => {
 
   try {
     if (!user) {
-      throw new Error();
+      res.status(404).send();
     }
 
     res.set('Content-Type', 'image/png');
@@ -261,7 +244,7 @@ router.get('/user/:id/image', async (req, res) => {
     if (user.image) {
       res.send(user.image);
     } else {
-      res.status(404);
+      res.status(404).send();
     }
   } catch (e) {
     console.log(e);
@@ -286,13 +269,12 @@ router.get('/user/:id/image', async (req, res) => {
  *     tags:
  *          - Users
  */
-router.delete('/user/image', authCheck, upload.single('image'), async (req, res) => {
+router.delete('/user/image', authCheck, async (req, res) => {
   // Get relevant db entries
 
   const user = await User.findOne({
     firebaseUUID: req.user.sub,
   });
-  console.log(req.user);
 
   if (user) {
     user.image = null;

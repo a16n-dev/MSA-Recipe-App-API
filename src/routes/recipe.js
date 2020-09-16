@@ -31,9 +31,6 @@ router.post('/recipe', authCheck, async (req, res) => {
     firebaseUUID: req.user.sub,
   });
 
-  console.log(user);
-  console.log(req.body);
-
   const recipe = new Recipe({
     ...req.body,
     // eslint-disable-next-line no-underscore-dangle
@@ -43,7 +40,6 @@ router.post('/recipe', authCheck, async (req, res) => {
 
   try {
     await recipe.save();
-    console.log(recipe);
     res.status(201).json({
       id: recipe._id,
     });
@@ -68,18 +64,15 @@ router.post('/recipe', authCheck, async (req, res) => {
  */
 router.get('/recipe', authCheck, async (req, res) => {
   // Get the user who sent the request
-  console.log(req.user.sub);
   const user = await User.findOne({
     firebaseUUID: req.user.sub,
   });
-  console.log(user);
   if (user) {
     // TODO: Pagination options?
     try {
       await user.populate('recipes', '_id name prepTime servings createdAt updatedAt isPublic ingredients method').execPopulate();
       res.status(200).json(user.recipes);
     } catch (error) {
-      console.log('bruh');
       res.status(400).send(error);
     }
   } else {
@@ -118,7 +111,6 @@ router.get('/recipe/:id', authCheck, async (req, res) => {
 
   if (recipe) {
     // Send data if user is owner or recipe is public
-    console.log(recipe);
     if (recipe.user.toString() === user._id.toString() || recipe.public === true) {
       res.status(200).json(recipe);
     } else {
@@ -147,7 +139,6 @@ router.get('/recipe/:id', authCheck, async (req, res) => {
  */
 router.get('/recipe/public/:id', authObserve, async (req, res) => {
   // Get the user who sent the request
-
   // Find the specific recipe
   const recipe = await Recipe.findOne({
     _id: req.params.id,
@@ -157,6 +148,20 @@ router.get('/recipe/public/:id', authObserve, async (req, res) => {
   if (recipe) {
     const data = recipe.toObject();
     delete data.notes;
+    delete data.subscribers;
+    delete data.image;
+
+    if (req.user) {
+      const user = await User.findOne({
+        firebaseUUID: req.user.sub,
+      });
+      if (recipe.subscribers.find((v, i) => v.toString() === user._id.toString())) {
+        data.subscribed = true;
+      } else {
+        data.subscribed = false;
+      }
+    }
+
     // Send data if user is owner or recipe is public
     res.status(200).json(data);
   } else {
@@ -348,6 +353,74 @@ router.get('/recipe/:id/image', async (req, res) => {
     }
   } catch (e) {
     console.log(e);
+    res.status(404).send();
+  }
+});
+
+// Subscribes the authenticated user to the recipe with the specified id
+router.post('/recipe/public/:id/subscribe', authCheck, async (req, res) => {
+  // Get the user who sent the request
+  const user = await User.findOne({
+    firebaseUUID: req.user.sub,
+  });
+
+  // Find the specific recipe
+  const recipe = await Recipe.findOne({
+    _id: req.params.id,
+    isPublic: true,
+  });
+
+  if (recipe) {
+    recipe.subscribers.push(user._id);
+    recipe.save();
+    res.status(200).send();
+  } else {
+    res.status(404).send(); // No recipe found
+  }
+});
+
+// Subscribes the authenticated user to the recipe with the specified id
+router.post('/recipe/public/:id/unsubscribe', authCheck, async (req, res) => {
+  console.log('endpoint called');
+  // Get the user who sent the request
+  const user = await User.findOne({
+    firebaseUUID: req.user.sub,
+  });
+
+  // Find the specific recipe
+  const recipe = await Recipe.findOne({
+    _id: req.params.id,
+    isPublic: true,
+  });
+
+  if (recipe) {
+    recipe.subscribers.splice(recipe.subscribers.indexOf(user._id.toString()), 1);
+    recipe.save();
+    res.status(200).send();
+  } else {
+    res.status(404).send(); // No recipe found
+  }
+});
+
+// Gets all subscribed recipes for the ucrrent user
+router.get('/subscriptions', authCheck, async (req, res) => {
+  // Get the user who sent the request
+  console.log(req.user.sub);
+  const user = await User.findOne({
+    firebaseUUID: req.user.sub,
+  });
+
+  console.log(user);
+  if (user) {
+    try {
+      await user.populate('savedRecipes', '_id name prepTime servings createdAt updatedAt isPublic authorName ingredients method').execPopulate();
+      await user.savedRecipes.forEach((v, i) => v.populate('user').execPopulate());
+      console.log(user.savedRecipes);
+      res.status(200).json(user.savedRecipes);
+    } catch (error) {
+      res.status(400).send(error);
+    }
+  } else {
     res.status(404).send();
   }
 });

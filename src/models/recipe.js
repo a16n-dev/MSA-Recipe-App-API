@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const User = require('./user');
 
 // Define schema for user
 const recipeSchema = new mongoose.Schema({
@@ -26,20 +27,31 @@ const recipeSchema = new mongoose.Schema({
   notes: {
     type: Array,
   },
+  authorName: {
+    type: String,
+  },
   user: {
     type: mongoose.Schema.Types.ObjectId,
     required: true,
     ref: 'User',
   },
-  authorName: {
-    type: String,
-  },
   image: {
     type: Buffer,
   },
+  subscribers: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+  }],
 }, {
   timestamps: true,
 });
+
+recipeSchema.methods.toJSON = function () {
+  const obj = this.toObject();
+  delete obj.subscribers;
+  delete obj.image;
+  return obj;
+};
 
 const Recipe = mongoose.model('Recipe', recipeSchema);
 
